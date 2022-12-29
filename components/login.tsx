@@ -1,8 +1,12 @@
-import supabasae from "utils/supabase";
+import { useOutletContext } from "@remix-run/react";
+
+import type { SupabaseOutletContext } from "~/root";
 
 const Login = () => {
+  const { supabase } = useOutletContext<SupabaseOutletContext>();
+
   const handleLogin = async () => {
-    const { error } = await supabasae.auth.signInWithOAuth({ provider: "github" });
+    const { error } = await supabase.auth.signInWithOAuth({ provider: "github" });
 
     if (error) {
       console.log(error);
@@ -10,7 +14,7 @@ const Login = () => {
   };
 
   const handleLogout = async () => {
-    const { error } = await supabasae.auth.signOut();
+    const { error } = await supabase.auth.signOut();
 
     if (error) {
       console.log(error);

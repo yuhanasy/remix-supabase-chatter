@@ -1,11 +1,11 @@
 import { useLoaderData } from "@remix-run/react";
-import supabasae from "utils/supabase";
+import supabase from "utils/supabase.server";
 
 import type { LoaderArgs } from "@remix-run/node";
 import Login from "components/login";
 
 export const loader = async ({}: LoaderArgs) => {
-  const { data } = await supabasae.from("messages").select();
+  const { data } = await supabase.from("messages").select();
 
   return { messages: data ?? [] };
 };
