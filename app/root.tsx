@@ -1,5 +1,5 @@
 import { json } from "@remix-run/node";
-import { Links, LiveReload, Meta, Outlet, Scripts, ScrollRestoration, useLoaderData } from "@remix-run/react";
+import { Links, LiveReload, Meta, Outlet, Scripts, ScrollRestoration, useFetcher, useLoaderData } from "@remix-run/react";
 import { createBrowserClient } from "@supabase/auth-helpers-remix";
 import { useEffect, useState } from "react";
 import createServerSupabase from "utils/supabase.server";
@@ -29,20 +29,37 @@ export const loader = async ({ request }: LoaderArgs) => {
   const response = new Response();
   const supabase = createServerSupabase({ request, response });
 
-  const { data: session } = await supabase.auth.getSession();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
   return json({ env, session }, { headers: request.headers });
 };
 
 export default function App() {
   const { env, session } = useLoaderData<typeof loader>();
+  const fetcher = useFetcher();
 
-  console.log("server", { session });
+  const serverAccessToken = session?.access_token;
 
   const [supabase] = useState(() => createBrowserClient<Database>(env.SUPABASE_URL, env.SUPABASE_ANON_KEY));
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: session }) => console.log("clent", { session }));
-  }, []);
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.access_token !== serverAccessToken) {
+        // loader will be called again after an action (mutation) to keep everything sync / uptodate
+        fetcher.submit(null, {
+          method: "post",
+          action: "/handle-supabase-session",
+        });
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [fetcher, serverAccessToken, supabase.auth]);
 
   return (
     <html lang="en">
