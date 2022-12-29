@@ -15,7 +15,7 @@ export default function Index() {
   return (
     <main>
       <Login />
-      <pre>{JSON.stringify(messages, null, 2)}</pre>;
+      <pre>{JSON.stringify(messages, null, 2)}</pre>
     </main>
   );
 }
